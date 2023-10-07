@@ -1,0 +1,6 @@
+com\project\counter\impl\FileProcessorImpl.class
+com\project\counter\api\FileProcessor.class
+META-INF\services\com.project.counter.api.ProcessorFactory
+com\project\counter\api\ProcessorFactory.class
+com\project\counter\impl\ProcessorFactoryImpl.class
+com\project\counter\api\Main.class
