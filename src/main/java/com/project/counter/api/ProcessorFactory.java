@@ -1,7 +1,5 @@
 package com.project.counter.api;
 
-import java.io.FileNotFoundException;
-
 /**
  * An interface for the construction of {@link FileProcessor}s which limit the amount of data
  * they process.
@@ -14,5 +12,5 @@ public interface ProcessorFactory {
      * @return a {@link FileProcessor} which reads orders from its input stream and writes the
      * result of processing said orders out its output stream.
      */
-    FileProcessor createProcessor(String fileName) throws FileNotFoundException;
+    FileProcessor createProcessor(String fileName);
 }

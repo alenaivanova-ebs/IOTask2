@@ -1,77 +1,83 @@
 package com.project.counter.impl;
 
 import com.project.counter.api.FileProcessor;
-import org.supercsv.io.CsvListWriter;
-import org.supercsv.io.ICsvListWriter;
-import org.supercsv.prefs.CsvPreference;
+import com.project.counter.exception.FileProcessException;
+import com.project.counter.exception.WriteToFileException;
+import com.project.counter.model.Word;
 
 import java.io.*;
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class FileProcessorImpl implements FileProcessor {
-    private final String file;
+
+    private static final String OUTPUT_FILE_HEADER = "Слово,Частота,Частота (в %)";
 
     public FileProcessorImpl(String file) {
-        this.file = file;
     }
 
     @Override
-    public void process(String file, StringWriter output) throws IOException {
+    public void process(String file, String outputFile) throws FileProcessException, WriteToFileException {
         List<String> listOfWords = convertFileToListOfWords(file);
-        int numberOfWords = listOfWords.size();
-        Map<String, Long> wordsCounterUnsorted = listOfWords
-                .stream()
-                .collect(Collectors
-                        .groupingBy(Function.identity(), Collectors.counting()));
-        Map<String, Long> wordsCounterSorted = sortMapByValueDescending(wordsCounterUnsorted);
-
-        DecimalFormat df = new DecimalFormat("0.00");
-        // try (ICsvListWriter listWriter = new CsvListWriter(new FileWriter("src/main/resources/output.csv"), CsvPreference.STANDARD_PREFERENCE)) {
-        try (ICsvListWriter listWriter = new CsvListWriter(output, CsvPreference.STANDARD_PREFERENCE)) {
-            listWriter.writeHeader("Слово", "Частота", "Частота (в %)");
-            for (Map.Entry<String, Long> entry : wordsCounterSorted.entrySet()) {
-                double f = (double) entry.getValue() * 100 / numberOfWords;
-                listWriter.write(entry.getKey(), entry.getValue(), df.format(f));
-            }
-        }
-        System.out.println(output);
+        List<Word> listOfObjects = convertToListOfObjects(listOfWords);
+        writeToFile(listOfObjects, outputFile);
     }
 
-    public List<String> convertFileToListOfWords(String fileName) throws IOException {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        List<String> listOfWords = null;
-        try (
-                InputStream is = classloader.getResourceAsStream(fileName);
-                Reader reader = new InputStreamReader(is);) {
-            int data = reader.read();
-            StringBuilder word = new StringBuilder();
-            listOfWords = new ArrayList<>();
-            char theChar;
-            while (data != -1) {
-                theChar = (char) data;
-                if (Character.isLetter(theChar)) {
-                    word.append(theChar);
-                } else if (!word.isEmpty()) {
-                    listOfWords.add(word.toString());
-                    word = new StringBuilder();
-                }
-                data = reader.read();
+    private List<Word> convertToListOfObjects(List<String> inputWords) {
+        int numberOfWords = inputWords.size();
+        Set<String> setOfWords = new HashSet<>(inputWords);
+        List<Word> listOfObjects = new ArrayList<>();
+        for (String word : setOfWords) {
+            long count = inputWords.stream().filter(word::equals).count();
+            double freq = (double) count * 100 / numberOfWords;
+            Word wordObject = Word.builder().word(word).count(count).frequency(freq).build();
+            listOfObjects.add(wordObject);
+        }
+        listOfObjects.sort(getWordComparator());
+        return listOfObjects;
+    }
+
+    private void writeToFile(List<Word> outputData, String outputFile) throws WriteToFileException {
+        File file = new File(outputFile);
+        try (FileWriter writer = new FileWriter(file, true);
+             BufferedWriter br = new BufferedWriter(writer)) {
+            br.write(OUTPUT_FILE_HEADER + System.lineSeparator());
+            for (Word entry : outputData) {
+                br.write(entry.word() + ',' + entry.count() + ',' + entry.frequency() + System.lineSeparator());
             }
         } catch (IOException e) {
-            System.err.println("Error while reading file: " + e.getLocalizedMessage());
+            throw new WriteToFileException("Error to write data to CSV file");
         }
-        return listOfWords;
     }
 
-    //Sorting values with custom Comparator: https://www.baeldung.com/java-sort-map-descending
-    public static <K extends Comparable<? super K>, V extends Comparable<? super V>> Map<K, V> sortMapByValueDescending(Map<K, V> map) {
+    private List<String> convertFileToListOfWords(String fileName) throws FileProcessException {
+        ClassLoader classloader = getClass().getClassLoader();
+        List<String> listOfWords = new ArrayList<>();
+        try (InputStream is = classloader.getResourceAsStream(fileName)) {
+            assert is != null;
+            try (Reader reader = new InputStreamReader(is)) {
+                int data = reader.read();
+                StringBuilder word = new StringBuilder();
+                char theChar;
+                while (data != -1) {
+                    theChar = (char) data;
+                    if (Character.isLetter(theChar)) {
+                        word.append(theChar);
+                    } else if (!word.isEmpty()) {
+                        listOfWords.add(word.toString());
+                        word = new StringBuilder();
+                    }
+                    data = reader.read();
+                }
+            }
+        } catch (IOException e) {
+            throw new FileProcessException("File not found");
+        }
+        System.out.println(listOfWords);
+        return listOfWords;
 
-        return map.entrySet()
-                .stream()
-                .sorted(Map.Entry.<K, V>comparingByValue().reversed().thenComparing(Map.Entry.<K, V>comparingByKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+    }
+
+    private static Comparator<Word> getWordComparator() {
+        return Comparator.comparing(Word::count).reversed().thenComparing(Word::word);
     }
 }

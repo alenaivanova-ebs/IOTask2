@@ -1,24 +1,26 @@
 package com.project.counter.api;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import com.project.counter.exception.FileProcessException;
+import com.project.counter.exception.WriteToFileException;
+
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
-//java -jar Exercise-1.0-SNAPSHOT-jar-with-dependencies.jar input_3.txt
+
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.printf("Usage:%n  java -jar  application.jar <fileName> %n");
+    public static void main(String[] args) throws WriteToFileException, FileProcessException {
+        if (args.length != 2) {
+            System.err.printf("Usage:%n  java -jar  application.jar <inputFileName> <outputFileName> %n");
             System.exit(1);
         }
 
-        String fileName = args[0];
-        process(fileName);
+        String inputFileName = args[0];
+        String outputFileName = args[1];
+        process(inputFileName, outputFileName);
     }
 
-    private static void process(String fileName) throws IOException {
+    private static void process(String inputFileName, String outputFileName) throws WriteToFileException, FileProcessException {
         Iterator<ProcessorFactory> factories =
                 ServiceLoader.load(ProcessorFactory.class).iterator();
         if (!factories.hasNext()) {
@@ -26,8 +28,7 @@ public class Main {
         }
 
         ProcessorFactory factory = factories.next();
-        FileProcessor processor = factory.createProcessor(fileName);
-        StringWriter output = new StringWriter();
-        processor.process(fileName, output);
+        FileProcessor processor = factory.createProcessor(inputFileName);
+        processor.process(inputFileName, outputFileName);
     }
 }

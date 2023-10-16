@@ -57,6 +57,12 @@
             <version>2.14.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 
@@ -87,7 +93,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.project.counter.api.Main</mainClass>
+                            <mainClass>com.project.calc.api.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

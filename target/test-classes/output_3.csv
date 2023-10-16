@@ -1,8 +1,8 @@
 Слово,Частота,Частота (в %)
 and,9,6.72
 I,8,5.97
-that,5,3.73
 a,4,2.99
+that,4,2.99
 have,3,2.24
 is,3,2.24
 of,3,2.24
@@ -38,7 +38,7 @@ curation,1,0.75
 deserves,1,0.75
 developers,1,0.75
 do,1,0.75
-doesn,1,0.75
+doesnвЂ,1,0.75
 exposure,1,0.75
 feel,1,0.75
 felt,1,0.75
@@ -78,6 +78,7 @@ something,1,0.75
 sometimes,1,0.75
 t,1,0.75
 takes,1,0.75
+thatвЂ,1,0.75
 them,1,0.75
 there,1,0.75
 thing,1,0.75
